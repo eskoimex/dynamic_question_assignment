@@ -1,4 +1,3 @@
-// src/modules/questions/questions.service.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RedisService } from '../../redis/redis.service';

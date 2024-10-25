@@ -1,4 +1,3 @@
-// src/modules/redis/redis.service.ts
 import { Injectable } from '@nestjs/common';
 import { RedisClientType, createClient } from 'redis';
 

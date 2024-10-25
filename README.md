@@ -1,73 +1,141 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Question Rotation System
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Overview
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+This project implements a dynamic question rotation system that assigns questions to users based on their region and a configurable cycle duration. Built with **NestJS**, **Prisma**, and **MongoDB**, the system allows administrators to configure how frequently questions rotate (e.g., weekly, bi-weekly) and ensures that each region receives questions specific to that locale. 
 
-## Description
+The project is designed with scalability in mind, capable of handling **100,000+ daily active users** and scaling to support millions of global users.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Installation
+## Features
 
-```bash
-$ npm install
+- **Region-Specific Question Assignment**: Questions are assigned based on a user’s region, ensuring each region follows a unique question sequence.
+- **Configurable Cycle Duration**: Cycle duration is adjustable on a per-region basis, allowing flexible rotation intervals (e.g., 7 days, 14 days).
+- **Efficient Querying**: The design leverages efficient querying and a streamlined schema to handle high user volumes with minimal overhead.
+- **REST API Endpoints**: API endpoints support the retrieval of questions, configuration management, and the customization of cycle settings.
+
+---
+
+## System Architecture
+
+### Data Models
+
+#### 1. **Question Model**
+   - Stores each question, its region association, and the assigned cycle. 
+   - Fields:
+      - `id`: Unique identifier.
+      - `content`: Text content of the question.
+      - `regionId`: References the region associated with this question.
+      - `cycle`: Cycle number for question rotation.
+
+#### 2. **Region Model**
+   - Stores region-specific configurations, including the cycle duration and the starting date for calculating question cycles.
+   - Fields:
+      - `id`: Unique identifier.
+      - `name`: Name of the region.
+      - `cycleDuration`: Duration of each cycle in days (default 7 days).
+      - `startDate`: Start date for calculating the current cycle.
+
+#### 3. **User Model**
+   - Represents users in the system, each linked to a specific region to receive region-appropriate questions.
+   - Fields:
+      - `id`: Unique identifier.
+      - `regionId`: Identifier of the region the user is associated with.
+
+---
+
+### Key Concepts
+
+1. **Cycle Calculation**: The current cycle is calculated based on each region’s `startDate` and `cycleDuration`, enabling question assignments to change dynamically as each cycle completes.
+2. **Configurable Cycles**: Administrators can set and update the `cycleDuration` and `startDate` on a per-region basis. This allows flexible customization of the question rotation frequency across different regions.
+3. **Dynamic Question Assignment**: Questions are dynamically assigned based on the current cycle and region, using a calculated `cycleNumber` to index into each region’s question list.
+
+### Scalability Considerations
+
+- **Efficient Data Access**: The cycle logic is calculated in-memory, reducing load on MongoDB and supporting high query volumes.
+- **Minimal Database Updates**: Cycle durations and configurations can be adjusted without excessive recalculation or database locking.
+- **Horizontally Scalable**: With MongoDB’s document-based design, the system can handle high user volumes and be horizontally scaled if necessary.
+
+---
+
+## Implementation
+
+### Cycle Calculation Logic
+
+The `CycleService` calculates the current cycle based on `startDate` and `cycleDuration`, enabling question assignment changes as cycles complete. Here’s an example of the calculation:
+
+```typescript
+const timeDifference = now.getTime() - new Date(startDate).getTime();
+const cycleNumber = Math.floor(timeDifference / (cycleDuration * 24 * 60 * 60 * 1000)) + 1;
 ```
 
-## Running the app
 
-```bash
-# development
-$ npm run start
+### Database Seeding
 
-# watch mode
-$ npm run start:dev
+A seed script is provided to initialize the database with sample regions and questions, facilitating a smooth development setup.
 
-# production mode
-$ npm run start:prod
+### Pros and Cons of the Design
+## Pros
+**Efficiency and Scalability**: By linking users to regions with specific cycle configurations, the system minimizes the need for constant recalculations and supports a high volume of users.
+
+**Flexible Cycle Configuration**: The system’s design allows administrators to adjust the question rotation frequency independently for each region.
+
+**Dynamic Assignment**: With the current cycle calculation based on region-specific configurations, questions can be dynamically assigned, allowing for adaptive user experiences.
+
+## Cons
+**Potential Redundancy in Configuration**: If multiple regions need identical configurations, updating each region independently may lead to slight overhead.
+Complexity with Multiple Regions: As the number of regions grows, managing cycle configurations could become more challenging without a centralized configuration management system.
+
+**Scalability Limitation with MongoDB**: Although MongoDB can handle large datasets, extremely high query volumes or complex relational data might require switching to a more relational database, like PostgreSQL, for better performance.
+
+## Future Improvements
+**Caching**: Implementing a caching layer for frequently accessed data (e.g., current cycle information) can enhance performance.
+
+**Automated Cycle Update**: Set up a scheduled task to precompute cycles in advance, reducing real-time load during peak usage.
+
+**Multi-Region Support Enhancements**: Consider consolidating duplicate configurations if multiple regions require the same cycle settings to reduce manual overhead.
+
+## API Endpoints
+
+### 1. Get Current Question by Region
+- **Endpoint:** `GET /questions/:regionId`
+- **Description:** Retrieves the question assigned for the current cycle in a specified region.
+
+### 2. Update Cycle Configuration
+- **Endpoint:** `PATCH /cycle/config/:regionId`
+- **Description:** Updates `cycleDuration` and `startDate` for a specific region.
+- **Request Body:**
+  ```json
+  {
+    "cycleDuration": 14,
+    "startDate": "2024-01-08T11:00:00Z"
+  }
+
+---
+
+## Project setup
+
+# Install Dependencies:
+```
+npm install
+```
+Configure Environment: Set DATABASE_URL in the .env file to your MongoDB connection URL.
+
+
+# Run Migrations:
+```
+npx prisma migrate dev
 ```
 
-## Test
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# Seed Database:
+```
+npm run seed
 ```
 
-## Support
+# Start Server:
+```
+npm run start
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
+With this design, the question rotation system provides a robust, scalable, and flexible solution, handling various cycle configurations with a focus on global scalability.

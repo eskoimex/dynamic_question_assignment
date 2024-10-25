@@ -13,9 +13,9 @@ import { Module } from '@nestjs/common';
 import { QuestionsService } from '../questions/questions.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CyclesController } from './cycles.controller';
-import { RedisModule } from '../../redis/redis.module';
 import { CyclesService } from '../cycles/cycles.service';
 import { RedisService } from '../../redis/redis.service';
+import { RedisModule } from '../../redis/redis.module';
 
 @Module({
   imports: [RedisModule],

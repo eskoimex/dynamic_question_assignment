@@ -1,4 +1,3 @@
-// src/modules/queue/assignment.queue.service.ts
 import { Injectable } from '@nestjs/common';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';

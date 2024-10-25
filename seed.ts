@@ -1,4 +1,3 @@
-// seed.ts
 
 import { PrismaClient } from '@prisma/client';
 
@@ -37,7 +36,6 @@ async function main() {
         content: 'What is your favorite place in Singapore?',
         regionId: singapore.id,
       },
-      // Add more questions as needed
     ],
   });
 
@@ -46,7 +44,6 @@ async function main() {
     data: [
       { content: 'What is your favorite US city?', regionId: us.id },
       { content: 'What is your favorite American food?', regionId: us.id },
-      // Add more questions as needed
     ],
   });
 
