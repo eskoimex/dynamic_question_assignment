@@ -128,6 +128,11 @@ Configure Environment: Set DATABASE_URL in the .env file to your MongoDB connect
 npx prisma migrate dev
 ```
 
+# Setup Redis via docker:
+```
+docker run --name redis -p 6379:6379 -d redis
+```
+
 # Seed Database:
 ```
 npm run seed
