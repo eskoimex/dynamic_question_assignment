@@ -12,6 +12,7 @@ export class QuestionsService {
   ) {}
 
   async getQuestionForUser(regionId: string): Promise<any> {
+    
     const cycleIndex = await this.cyclesService.getCurrentCycle(regionId);
     const cachedQuestion = await this.redisService.getQuestionFromCache(
       regionId,

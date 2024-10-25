@@ -1,10 +1,14 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AssignmentQueueService } from '../../queue/assignment.queue.service';
 
 @Injectable()
 export class CyclesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private assignmentQueueService: AssignmentQueueService,
+  ) {}
 
   async getCurrentCycle(regionId: string): Promise<number> {
     // Fetch region configuration
@@ -21,7 +25,8 @@ export class CyclesService {
 
     // Calculate the current cycle based on the region's startDate and cycleDuration
     const timeDifference = now.getTime() - new Date(startDate).getTime();
-    const cycleNumber = Math.floor(timeDifference / (cycleDuration * 24 * 60 * 60 * 1000)) + 1;
+    const cycleNumber =
+      Math.floor(timeDifference / (cycleDuration * 24 * 60 * 60 * 1000)) + 1;
 
     return cycleNumber;
   }
@@ -39,6 +44,8 @@ export class CyclesService {
       where: { id: regionId },
       data: { cycleDuration, startDate },
     });
+
+    await this.assignmentQueueService.assignQuestionsToUsers(regionId);
 
     return updatedRegion;
   }
